@@ -5,7 +5,6 @@ import About from './components/About'
 import Why from './components/Why'
 import Schedule from './components/Schedule'
 import FinalCta from './components/FinalCta'
-import CinematicBackground from './components/CinematicBackground'
 import CinematicLoader from './components/CinematicLoader'
 
 export default function App() {
@@ -14,16 +13,11 @@ export default function App() {
   return (
     <div className="site-wrapper">
       {/* 
-        Layer 9999: Cinematic Initial Full-Screen Loader (01% → 100%)
-        Animates smoothly, reveals website with seamless fade/scale transition, then unmounts.
+        Layer 9999: Cinematic Initial Landing Experience & Loader (01% → 100%)
+        Plays video/cinematic-intro.mp4 on initial open, smoothly reveals the DPL Auction
+        landing page, then unmounts completely. NO global video background.
       */}
       <CinematicLoader />
-
-      {/* 
-        Layer 0: Global Viewport-Fixed Cinematic Video Background
-        Plays continuously, loops automatically, never blocks user interaction.
-      */}
-      <CinematicBackground />
 
       {/* Layer 100: Navigation Bar */}
       <Navbar />
@@ -39,3 +33,4 @@ export default function App() {
     </div>
   )
 }
+

@@ -1,15 +1,15 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 
 /**
- * CinematicLoader
+ * InitialLoader
  * ─────────────────────────────────────────────────────────────────────
- * Premium 01% → 100% full-screen initial loading experience.
+ * Pure 01% → 100% Cinematic Initialization Screen.
  *
- * • Smooth multi-stage easing progression over ~3.2 seconds
- * • High-contrast black & electric blue DPL Auction arena aesthetic
- * • Dynamic telemetry status ticker updating in sync with percentage
- * • Smooth cinematic scale & fade-out reveal sequence
- * • Auto unmounts and restores normal page scrolling upon completion
+ * • Zero scroll lock — page scrolling is fully unlocked and available immediately
+ * • Independent from landing video (Hero handles the landing video)
+ * • Multi-stage non-linear easing progression over ~2.4s
+ * • Smooth fade & scale out reveal transition upon reaching 100%
+ * • Completely unmounts upon completion
  * ─────────────────────────────────────────────────────────────────────
  */
 export default function CinematicLoader() {
@@ -17,30 +17,33 @@ export default function CinematicLoader() {
   const [phase, setPhase] = useState('loading') // 'loading' | 'revealing' | 'done'
   const animFrameRef = useRef(null)
 
-  useEffect(() => {
-    // Lock scrolling while loader is active
-    document.body.style.overflow = 'hidden'
+  const handleFinish = useCallback(() => {
+    if (phase === 'done') return
+    setPhase('revealing')
+    setTimeout(() => {
+      setPhase('done')
+    }, 650)
+  }, [phase])
 
+  useEffect(() => {
+    // Scrolling is deliberately NOT locked so user can scroll immediately
     const startTime = performance.now()
-    const DURATION = 3200 // 3.2s total cinematic duration
+    const DURATION = 2400 // ~2.4s smooth initialization
 
     const updateCounter = (now) => {
       const elapsed = now - startTime
       const progress = Math.min(1, elapsed / DURATION)
 
-      // Cinematic multi-stage non-linear easing curve
+      // Cinematic multi-stage easing curve
       let eased
       if (progress < 0.3) {
-        // Initial steady ramp 1% -> 30%
-        eased = (progress / 0.3) * 0.3
+        eased = (progress / 0.3) * 0.35
       } else if (progress < 0.7) {
-        // Middle strategic pause / calibrating stage
         const midT = (progress - 0.3) / 0.4
-        eased = 0.3 + Math.pow(midT, 0.9) * 0.45
+        eased = 0.35 + Math.pow(midT, 0.9) * 0.42
       } else {
-        // Final rapid sprint 75% -> 100%
         const endT = (progress - 0.7) / 0.3
-        eased = 0.75 + Math.pow(endT, 1.2) * 0.25
+        eased = 0.77 + Math.pow(endT, 1.2) * 0.23
       }
 
       const currentVal = Math.min(100, Math.max(1, Math.round(eased * 100)))
@@ -50,16 +53,9 @@ export default function CinematicLoader() {
         animFrameRef.current = requestAnimationFrame(updateCounter)
       } else {
         setPercent(100)
-        // Hold on 100% briefly before initiating cinematic reveal
         setTimeout(() => {
-          setPhase('revealing')
-          // Unlock page scroll immediately as reveal begins
-          document.body.style.overflow = ''
-          // Complete unmount after fade transition
-          setTimeout(() => {
-            setPhase('done')
-          }, 850)
-        }, 280)
+          handleFinish()
+        }, 200)
       }
     }
 
@@ -67,9 +63,8 @@ export default function CinematicLoader() {
 
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
-      document.body.style.overflow = ''
     }
-  }, [])
+  }, [handleFinish])
 
   if (phase === 'done') return null
 
@@ -97,20 +92,30 @@ export default function CinematicLoader() {
       aria-valuemin={1}
       aria-valuemax={100}
     >
-      {/* Background ambient lighting */}
+      {/* Background ambient lighting & grid */}
       <div className="loader-ambient-glow" aria-hidden="true" />
       <div className="loader-grid-lines" aria-hidden="true" />
 
-      {/* Top Bar Branding */}
+      {/* Top Bar Branding & Skip Action */}
       <div className="loader-top-row">
         <div className="loader-brand-badge">
           <span className="loader-pulse-dot" />
           <span className="loader-brand-title">DPL // CRICKET AUCTION</span>
         </div>
-        <div className="loader-edition-tag">OFFICIAL PORTAL // 2026 EDITION</div>
+        <div className="loader-top-actions">
+          <span className="loader-edition-tag">OFFICIAL PORTAL // 2026 EDITION</span>
+          <button
+            type="button"
+            className="loader-skip-btn"
+            onClick={handleFinish}
+            aria-label="Skip Loading Screen"
+          >
+            SKIP ➔
+          </button>
+        </div>
       </div>
 
-      {/* Center Percentage Display */}
+      {/* Center Percentage Display & Telemetry */}
       <div className="loader-center-hero">
         <div className="loader-counter-wrap">
           <span className="loader-huge-number">{formattedNum}</span>
